@@ -1,20 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check, Download } from "lucide-react";
+import { Copy, Check, Download, ExternalLink } from "lucide-react";
 import type { RiskLevel } from "@/lib/types";
 import clsx from "clsx";
 
 const riskStyles: Record<RiskLevel, string> = {
-  low: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
-  medium: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
-  high: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
+  low: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-emerald-500/20",
+  medium: "bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-amber-500/20",
+  high: "bg-red-500/10 text-red-600 dark:text-red-400 ring-red-500/20",
 };
 
 const riskLabels: Record<RiskLevel, string> = {
   low: "Thấp",
   medium: "Trung bình",
   high: "Cao",
+};
+
+const riskDots: Record<RiskLevel, string> = {
+  low: "bg-emerald-500",
+  medium: "bg-amber-500",
+  high: "bg-red-500",
 };
 
 interface CopyButtonProps {
@@ -32,12 +38,8 @@ export function CopyButton({ text, label = "Copy" }: CopyButtonProps) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-    >
-      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+    <button type="button" onClick={handleCopy} className="btn-ghost">
+      {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
       {copied ? "Đã copy" : label}
     </button>
   );
@@ -60,11 +62,7 @@ export function DownloadScriptButton({ content, filename }: DownloadScriptButton
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleDownload}
-      className="inline-flex items-center gap-1.5 rounded-md bg-ubuntu-orange px-2.5 py-1.5 text-xs font-medium text-white hover:bg-orange-600"
-    >
+    <button type="button" onClick={handleDownload} className="btn-primary !px-3 !py-1.5 !text-xs">
       <Download className="h-3.5 w-3.5" />
       Tải .sh
     </button>
@@ -95,68 +93,100 @@ export function CommandBlock({
   const scriptContent = `#!/bin/bash\nset -e\n\n# ${title}\n${commands}`;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-      <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white">{title}</h3>
+    <div className="card animate-slide-up overflow-hidden">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border p-4">
+        <div className="min-w-0 flex-1">
+          <h3 className="font-bold text-content">{title}</h3>
           {description && (
-            <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">{description}</p>
+            <p className="mt-0.5 text-sm text-content-muted">{description}</p>
           )}
         </div>
-        <span className={clsx("rounded-full px-2.5 py-0.5 text-xs font-medium", riskStyles[riskLevel])}>
-          Rủi ro: {riskLabels[riskLevel]}
+        <span
+          className={clsx(
+            "badge ring-1 ring-inset",
+            riskStyles[riskLevel]
+          )}
+        >
+          <span className={clsx("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", riskDots[riskLevel])} />
+          Rủi ro {riskLabels[riskLevel]}
         </span>
       </div>
 
       {warnings && warnings.length > 0 && (
-        <div className="mb-3 space-y-1">
+        <div className="space-y-1 border-b border-border bg-red-500/5 px-4 py-3">
           {warnings.map((w, i) => (
-            <p key={i} className="text-sm text-red-600 dark:text-red-400">⚠ {w}</p>
+            <p key={i} className="text-sm text-red-600 dark:text-red-400">
+              ⚠ {w}
+            </p>
           ))}
         </div>
       )}
 
-      <pre className="mb-3 overflow-x-auto rounded-md bg-gray-900 p-3 text-sm text-green-400">
-        <code>{commands}</code>
-      </pre>
+      {/* Terminal */}
+      <div className="p-4">
+        <div className="terminal-window">
+          <div className="terminal-header">
+            <span className="terminal-dot bg-[#ff5f57]" />
+            <span className="terminal-dot bg-[#febc2e]" />
+            <span className="terminal-dot bg-[#28c840]" />
+            <span className="ml-2 text-xs text-white/40">bash</span>
+          </div>
+          <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed text-[#7ee787]">
+            <code>{commands}</code>
+          </pre>
+        </div>
 
-      <div className="flex flex-wrap gap-2">
-        <CopyButton text={commands} />
-        <DownloadScriptButton content={scriptContent} filename={`${title.replace(/\s+/g, "-").toLowerCase()}.sh`} />
+        <div className="mt-3 flex flex-wrap gap-2">
+          <CopyButton text={commands} />
+          <DownloadScriptButton
+            content={scriptContent}
+            filename={`${title.replace(/\s+/g, "-").toLowerCase()}.sh`}
+          />
+        </div>
       </div>
 
       {checks && (
-        <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700">
-          <p className="mb-1 text-xs font-medium text-gray-500">Kiểm tra:</p>
-          <pre className="overflow-x-auto rounded bg-gray-100 p-2 text-xs dark:bg-gray-900 dark:text-gray-300">
+        <div className="border-t border-border bg-surface-muted/50 px-4 py-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-content-faint">
+            Kiểm tra
+          </p>
+          <pre className="overflow-x-auto rounded-lg bg-[#0d1117] p-3 font-mono text-xs text-[#79c0ff]">
             <code>{checks}</code>
           </pre>
-          <div className="mt-1">
+          <div className="mt-2">
             <CopyButton text={checks} label="Copy kiểm tra" />
           </div>
         </div>
       )}
 
       {rollback && (
-        <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700">
-          <p className="mb-1 text-xs font-medium text-amber-600">Rollback:</p>
-          <pre className="overflow-x-auto rounded bg-amber-50 p-2 text-xs dark:bg-amber-900/20 dark:text-amber-200">
+        <div className="border-t border-border bg-amber-500/5 px-4 py-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+            Rollback
+          </p>
+          <pre className="overflow-x-auto rounded-lg bg-[#0d1117] p-3 font-mono text-xs text-amber-300/90">
             <code>{rollback}</code>
           </pre>
-          <div className="mt-1">
+          <div className="mt-2">
             <CopyButton text={rollback} label="Copy rollback" />
           </div>
         </div>
       )}
 
       {source && (
-        <p className="mt-3 text-xs text-gray-500">
-          Nguồn:{" "}
-          <a href={source} target="_blank" rel="noopener noreferrer" className="text-ubuntu-orange hover:underline">
-            {source}
+        <div className="border-t border-border px-4 py-3">
+          <a
+            href={source}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-content-muted transition-colors hover:text-ubuntu-orange"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Nguồn: {new URL(source).hostname}
+            <span className="text-content-faint">— tham khảo tài liệu gốc nếu lệnh không khớp</span>
           </a>
-          {" "}— Nếu lệnh không khớp, tham khảo tài liệu gốc từ nhà phát triển.
-        </p>
+        </div>
       )}
     </div>
   );

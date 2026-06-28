@@ -1,28 +1,46 @@
 import Link from "next/link";
 import { serverProfiles, toolsById } from "@/lib/tools";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LayoutTemplate } from "lucide-react";
 
 export default function ProfilesPage() {
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Hồ sơ cấu hình server</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Chọn hồ sơ phù hợp để xem danh sách công cụ cần cấu hình theo thứ tự khuyến nghị.
-        </p>
+    <div className="space-y-8 pb-8">
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-surface-elevated p-6 shadow-card sm:p-8">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="relative flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/10">
+            <LayoutTemplate className="h-6 w-6 text-violet-500" />
+          </div>
+          <div>
+            <h1 className="section-title">Hồ sơ cấu hình server</h1>
+            <p className="section-subtitle">
+              Chọn hồ sơ phù hợp để xem danh sách công cụ cần cấu hình theo thứ tự khuyến nghị.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-6">
-        {serverProfiles.map((profile) => (
+      <div className="space-y-5">
+        {serverProfiles.map((profile, pi) => (
           <section
             key={profile.id}
             id={profile.id}
-            className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+            className="card overflow-hidden"
+            style={{ animationDelay: `${pi * 60}ms` }}
           >
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{profile.name}</h2>
-            <p className="mt-1 text-gray-600 dark:text-gray-400">{profile.description}</p>
+            <div className="border-b border-border bg-surface-muted/50 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-content">{profile.name}</h2>
+                  <p className="mt-0.5 text-sm text-content-muted">{profile.description}</p>
+                </div>
+                <span className="badge bg-ubuntu-orange/10 text-ubuntu-orange">
+                  {profile.tools.length} bước
+                </span>
+              </div>
+            </div>
 
-            <ol className="mt-4 space-y-2">
+            <ol className="divide-y divide-border">
               {profile.tools.map((toolId: string, index: number) => {
                 const tool = toolsById[toolId];
                 if (!tool) return null;
@@ -30,15 +48,18 @@ export default function ProfilesPage() {
                   <li key={toolId}>
                     <Link
                       href={`/tools/${toolId}`}
-                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className="group flex items-center gap-4 px-6 py-4 transition-colors hover:bg-surface-muted/50"
                     >
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ubuntu-orange/10 text-xs font-bold text-ubuntu-orange">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-ubuntu-orange/20 to-ubuntu-orange/5 text-sm font-bold text-ubuntu-orange transition-transform group-hover:scale-110">
                         {index + 1}
                       </span>
-                      <span className="flex-1 font-medium text-gray-900 dark:text-white">
-                        {tool.definition.name}
-                      </span>
-                      <ArrowRight className="h-4 w-4 text-gray-400" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-content">{tool.definition.name}</p>
+                        <p className="truncate text-xs text-content-faint">
+                          {tool.definition.description}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-content-faint transition-all group-hover:translate-x-1 group-hover:text-ubuntu-orange" />
                     </Link>
                   </li>
                 );

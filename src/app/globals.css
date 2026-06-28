@@ -3,7 +3,140 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --surface: #ffffff;
+    --surface-elevated: #ffffff;
+    --surface-muted: #f8fafc;
+    --border: #e2e8f0;
+    --border-subtle: #f1f5f9;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-faint: #94a3b8;
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-card-hover: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+    --accent: #e95420;
+    --accent-hover: #d14a1c;
+  }
+
+  .dark {
+    --surface: #0c0a14;
+    --surface-elevated: #13111c;
+    --surface-muted: #1a1726;
+    --border: #2a2638;
+    --border-subtle: #1f1c2e;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-faint: #64748b;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --shadow-card-hover: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    --accent: #f77d3e;
+    --accent-hover: #e95420;
+  }
+
   html {
     scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface text-content antialiased;
+  }
+
+  ::selection {
+    @apply bg-ubuntu-orange/25 text-content;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-border;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-content-faint;
+  }
+}
+
+@layer components {
+  .glass {
+    border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    background: color-mix(in srgb, var(--surface-elevated) 80%, transparent);
+    backdrop-filter: blur(24px);
+  }
+
+  .glass-strong {
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    background: color-mix(in srgb, var(--surface-elevated) 90%, transparent);
+    backdrop-filter: blur(40px);
+  }
+
+  .card {
+    @apply rounded-2xl border border-border bg-surface-elevated shadow-card transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply card hover:border-ubuntu-orange/30 hover:shadow-card-hover;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-ubuntu-orange px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition-all duration-200 hover:bg-ubuntu-orange-light hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface-muted px-5 py-2.5 text-sm font-medium text-content transition-all duration-200 hover:border-ubuntu-orange/40 hover:bg-surface-elevated;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-content-muted transition-colors hover:bg-surface-muted hover:text-content;
+  }
+
+  .input-modern {
+    @apply w-full rounded-xl border border-border bg-surface-muted px-4 py-2.5 text-sm text-content placeholder:text-content-faint transition-all duration-200 focus:border-ubuntu-orange/50 focus:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-ubuntu-orange/20;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  .section-title {
+    @apply text-2xl font-bold tracking-tight text-content sm:text-3xl;
+  }
+
+  .section-subtitle {
+    @apply mt-2 text-base text-content-muted;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-ubuntu-orange to-ubuntu-orange-light bg-clip-text text-transparent;
+  }
+
+  .terminal-window {
+    @apply overflow-hidden rounded-xl border border-border bg-[#0d1117] font-mono text-sm shadow-inner;
+  }
+
+  .terminal-header {
+    @apply flex items-center gap-2 border-b border-white/5 bg-[#161b22] px-4 py-2.5;
+  }
+
+  .terminal-dot {
+    @apply h-3 w-3 rounded-full;
+  }
+
+  .tab-pill {
+    @apply rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200;
+  }
+
+  .tab-pill-active {
+    @apply bg-ubuntu-orange text-white shadow-sm;
+  }
+
+  .tab-pill-inactive {
+    @apply text-content-muted hover:bg-surface-muted hover:text-content;
   }
 }

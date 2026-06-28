@@ -1,3 +1,6 @@
+import { AlertTriangle, Info } from "lucide-react";
+import clsx from "clsx";
+
 interface WarningBoxProps {
   warnings: string[];
   variant?: "default" | "danger";
@@ -6,21 +9,41 @@ interface WarningBoxProps {
 export function WarningBox({ warnings, variant = "default" }: WarningBoxProps) {
   if (warnings.length === 0) return null;
 
-  const styles =
-    variant === "danger"
-      ? "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/20"
-      : "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20";
+  const isDanger = variant === "danger";
 
   return (
-    <div className={`rounded-lg border p-4 ${styles}`}>
-      <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">
-        {variant === "danger" ? "⚠ Cảnh báo quan trọng" : "Lưu ý an toàn"}
-      </h3>
-      <ul className="list-inside list-disc space-y-1 text-sm text-gray-700 dark:text-gray-300">
-        {warnings.map((w, i) => (
-          <li key={i}>{w}</li>
-        ))}
-      </ul>
+    <div
+      className={clsx(
+        "flex gap-4 rounded-2xl border p-4",
+        isDanger
+          ? "border-red-500/20 bg-gradient-to-br from-red-500/5 to-orange-500/5"
+          : "border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-yellow-500/5"
+      )}
+    >
+      <div
+        className={clsx(
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+          isDanger ? "bg-red-500/10" : "bg-amber-500/10"
+        )}
+      >
+        {isDanger ? (
+          <AlertTriangle className="h-5 w-5 text-red-500" />
+        ) : (
+          <Info className="h-5 w-5 text-amber-500" />
+        )}
+      </div>
+      <div>
+        <h3 className="font-bold text-content">
+          {isDanger ? "Cảnh báo quan trọng" : "Lưu ý an toàn"}
+        </h3>
+        <ul className="mt-2 space-y-1.5">
+          {warnings.map((w, i) => (
+            <li key={i} className="text-sm text-content-muted">
+              • {w}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

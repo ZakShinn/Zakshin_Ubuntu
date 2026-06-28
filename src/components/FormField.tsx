@@ -17,34 +17,29 @@ export function FormField({ field, value, onChange, error }: FormFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
   const id = `field-${field.name}`;
 
-  const baseInputClass = clsx(
-    "w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white",
-    error
-      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-      : "border-gray-300 focus:border-ubuntu-orange focus:ring-ubuntu-orange dark:border-gray-600"
-  );
-
   if (field.type === "checkbox") {
     return (
-      <label className="flex cursor-pointer items-center gap-2">
+      <label className="group flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-ubuntu-orange/30 hover:bg-surface-muted">
         <input
           id={id}
           type="checkbox"
           checked={Boolean(value)}
           onChange={(e) => onChange(field.name, e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-ubuntu-orange focus:ring-ubuntu-orange"
+          className="mt-0.5 h-4 w-4 rounded border-border text-ubuntu-orange focus:ring-ubuntu-orange/30"
         />
-        <span className="text-sm text-gray-700 dark:text-gray-300">{field.label}</span>
-        {field.helpText && (
-          <span className="text-xs text-gray-500">({field.helpText})</span>
-        )}
+        <div>
+          <span className="text-sm font-medium text-content">{field.label}</span>
+          {field.helpText && (
+            <p className="mt-0.5 text-xs text-content-faint">{field.helpText}</p>
+          )}
+        </div>
       </label>
     );
   }
 
   return (
-    <div>
-      <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-sm font-semibold text-content">
         {field.label}
         {field.required && <span className="text-red-500"> *</span>}
       </label>
@@ -54,7 +49,7 @@ export function FormField({ field, value, onChange, error }: FormFieldProps) {
           id={id}
           value={String(value ?? "")}
           onChange={(e) => onChange(field.name, e.target.value)}
-          className={baseInputClass}
+          className={clsx("input-modern", error && "border-red-500 focus:ring-red-500/20")}
         >
           {field.options?.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -69,7 +64,7 @@ export function FormField({ field, value, onChange, error }: FormFieldProps) {
           onChange={(e) => onChange(field.name, e.target.value)}
           placeholder={field.placeholder}
           rows={field.type === "multiline-ips" ? 3 : 4}
-          className={baseInputClass}
+          className={clsx("input-modern resize-y", error && "border-red-500 focus:ring-red-500/20")}
         />
       ) : (
         <div className="relative">
@@ -79,13 +74,17 @@ export function FormField({ field, value, onChange, error }: FormFieldProps) {
             value={String(value ?? "")}
             onChange={(e) => onChange(field.name, e.target.value)}
             placeholder={field.placeholder}
-            className={baseInputClass}
+            className={clsx(
+              "input-modern",
+              field.type === "password" && "pr-10",
+              error && "border-red-500 focus:ring-red-500/20"
+            )}
           />
           {field.type === "password" && (
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-content-faint transition-colors hover:text-content"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -94,9 +93,13 @@ export function FormField({ field, value, onChange, error }: FormFieldProps) {
       )}
 
       {field.helpText && (
-        <p className="mt-1 text-xs text-gray-500">{field.helpText}</p>
+        <p className="text-xs text-content-faint">{field.helpText}</p>
       )}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      {error && (
+        <p className="flex items-center gap-1 text-xs font-medium text-red-500">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

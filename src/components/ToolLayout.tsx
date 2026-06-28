@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Sparkles, Wand2, ExternalLink, FileCode2 } from "lucide-react";
 import type { GeneratorResult, Mode } from "@/lib/types";
 import type { ToolConfig } from "@/lib/tools";
 import { FormField, validateForm } from "./FormField";
-import { CommandBlock } from "./CommandBlock";
+import { CommandBlock, DownloadScriptButton } from "./CommandBlock";
 import { WarningBox } from "./WarningBox";
-import { DownloadScriptButton } from "./CommandBlock";
 import { buildScript } from "@/lib/generators/utils";
 import { saveHistory } from "@/lib/history";
 import clsx from "clsx";
@@ -71,219 +71,253 @@ export function ToolLayout({ tool }: ToolLayoutProps) {
 
   const tabCommands = useMemo(() => {
     if (!result) return [];
-    if (activeTab === "rollback") {
-      return result.commands.filter((c) => c.rollback);
-    }
-    if (activeTab === "warning") return [];
-    if (activeTab === "explain") return [];
+    if (activeTab === "rollback") return result.commands.filter((c) => c.rollback);
+    if (activeTab === "warning" || activeTab === "explain") return [];
     return result.commands.filter((c) => c.category === activeTab);
   }, [result, activeTab]);
 
-  const fullScript = result
-    ? buildScript(result.commands, result.scriptName)
-    : "";
+  const fullScript = result ? buildScript(result.commands, result.scriptName) : "";
 
   const hasPassword = tool.fields.some(
     (f) => f.type === "password" && values[f.name]
   );
 
+  const tabCounts = useMemo(() => {
+    if (!result) return {} as Record<ResultTab, number>;
+    return {
+      install: result.commands.filter((c) => c.category === "install").length,
+      execute: result.commands.filter((c) => c.category === "execute").length,
+      check: result.commands.filter((c) => c.category === "check").length,
+      rollback: result.commands.filter((c) => c.rollback).length,
+      explain: result.explanations.length,
+      warning: result.warnings.length,
+    };
+  }, [result]);
+
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
-      <div className="flex-1 space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-surface-elevated p-6 shadow-card">
+        <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-ubuntu-orange/10 blur-2xl" />
+        <div className="relative">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="badge bg-ubuntu-orange/10 text-ubuntu-orange">
+              {tool.definition.category}
+            </span>
+            {mode === "advanced" && (
+              <span className="badge bg-violet-500/10 text-violet-500">Nâng cao</span>
+            )}
+          </div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-content sm:text-3xl">
             {tool.definition.name}
           </h1>
-          <p className="mt-1 text-gray-600 dark:text-gray-400">
-            {tool.definition.description}
-          </p>
+          <p className="mt-1.5 text-content-muted">{tool.definition.description}</p>
           {tool.definition.source && (
-            <p className="mt-1 text-xs text-gray-500">
-              Nguồn tham khảo:{" "}
-              <a
-                href={tool.definition.source}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-ubuntu-orange hover:underline"
-              >
-                {tool.definition.source}
-              </a>
-            </p>
+            <a
+              href={tool.definition.source}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-1 text-xs text-content-faint transition-colors hover:text-ubuntu-orange"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Tài liệu tham khảo
+            </a>
           )}
         </div>
+      </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex rounded-lg border border-gray-200 p-0.5 dark:border-gray-700">
+      <div className="grid gap-6 xl:grid-cols-2">
+        {/* Form panel */}
+        <div className="space-y-4">
+          {/* Mode toggle */}
+          <div className="flex rounded-xl border border-border bg-surface-muted/50 p-1">
             {(["safe", "advanced"] as Mode[]).map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => setMode(m)}
                 className={clsx(
-                  "rounded-md px-3 py-1.5 text-sm font-medium transition",
+                  "flex-1 rounded-lg py-2 text-sm font-semibold transition-all duration-200",
                   mode === m
-                    ? "bg-ubuntu-orange text-white"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                    ? "bg-surface-elevated text-content shadow-sm"
+                    : "text-content-muted hover:text-content"
                 )}
               >
-                {m === "safe" ? "An toàn" : "Nâng cao"}
+                {m === "safe" ? "🛡 An toàn" : "⚡ Nâng cao"}
               </button>
             ))}
           </div>
-        </div>
 
-        <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-          {visibleFields.map((field) => (
-            <FormField
-              key={field.name}
-              field={field}
-              value={values[field.name]}
-              onChange={handleChange}
-              error={errors[field.name]}
-            />
-          ))}
+          <div className="card space-y-5 p-5">
+            <div className="flex items-center gap-2 border-b border-border pb-4">
+              <Sparkles className="h-4 w-4 text-ubuntu-orange" />
+              <span className="text-sm font-bold text-content">Cấu hình</span>
+            </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Tên lưu lịch sử (tùy chọn)
-            </label>
-            <input
-              type="text"
-              value={historyName}
-              onChange={(e) => setHistoryName(e.target.value)}
-              placeholder="VD: VPS production firewall"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
-            />
-          </div>
+            {visibleFields.map((field) => (
+              <FormField
+                key={field.name}
+                field={field}
+                value={values[field.name]}
+                onChange={handleChange}
+                error={errors[field.name]}
+              />
+            ))}
 
-          <button
-            type="button"
-            onClick={handleGenerate}
-            className="w-full rounded-lg bg-ubuntu-orange px-4 py-2.5 font-medium text-white hover:bg-orange-600 sm:w-auto"
-          >
-            Sinh lệnh
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 space-y-4">
-        {result ? (
-          <>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Kết quả
-              </h2>
-              <DownloadScriptButton
-                content={fullScript}
-                filename={`${result.scriptName}.sh`}
+            <div className="space-y-1.5 border-t border-border pt-4">
+              <label className="block text-sm font-semibold text-content">
+                Lưu lịch sử <span className="font-normal text-content-faint">(tùy chọn)</span>
+              </label>
+              <input
+                type="text"
+                value={historyName}
+                onChange={(e) => setHistoryName(e.target.value)}
+                placeholder="VD: VPS production firewall"
+                className="input-modern"
               />
             </div>
 
-            {hasPassword && (
-              <WarningBox
-                warnings={[
-                  "Script chứa mật khẩu. Xóa file .sh sau khi dùng, không commit lên git.",
-                  "Ứng dụng không lưu password lên server — chỉ sinh lệnh local.",
-                ]}
-                variant="danger"
-              />
-            )}
+            <button type="button" onClick={handleGenerate} className="btn-primary w-full">
+              <Wand2 className="h-4 w-4" />
+              Sinh lệnh
+            </button>
+          </div>
+        </div>
 
-            {result.warnings.length > 0 && (
-              <WarningBox warnings={result.warnings} variant="danger" />
-            )}
+        {/* Results panel */}
+        <div className="space-y-4">
+          {result ? (
+            <div className="animate-slide-up space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <FileCode2 className="h-5 w-5 text-ubuntu-orange" />
+                  <h2 className="text-lg font-bold text-content">Kết quả</h2>
+                </div>
+                <DownloadScriptButton
+                  content={fullScript}
+                  filename={`${result.scriptName}.sh`}
+                />
+              </div>
 
-            <div className="flex flex-wrap gap-1 border-b border-gray-200 dark:border-gray-700">
-              {(Object.keys(tabLabels) as ResultTab[]).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={clsx(
-                    "px-3 py-2 text-sm font-medium transition",
-                    activeTab === tab
-                      ? "border-b-2 border-ubuntu-orange text-ubuntu-orange"
-                      : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              {hasPassword && (
+                <WarningBox
+                  warnings={[
+                    "Script chứa mật khẩu. Xóa file .sh sau khi dùng, không commit lên git.",
+                    "Ứng dụng không lưu password lên server — chỉ sinh lệnh local.",
+                  ]}
+                  variant="danger"
+                />
+              )}
+
+              {result.warnings.length > 0 && activeTab !== "warning" && (
+                <WarningBox warnings={result.warnings.slice(0, 2)} variant="danger" />
+              )}
+
+              {/* Tabs */}
+              <div className="flex flex-wrap gap-1 rounded-xl border border-border bg-surface-muted/50 p-1">
+                {(Object.keys(tabLabels) as ResultTab[]).map((tab) => {
+                  const count = tabCounts[tab];
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setActiveTab(tab)}
+                      className={clsx(
+                        "tab-pill",
+                        activeTab === tab ? "tab-pill-active" : "tab-pill-inactive"
+                      )}
+                    >
+                      {tabLabels[tab]}
+                      {count !== undefined && count > 0 && (
+                        <span
+                          className={clsx(
+                            "ml-1 rounded-full px-1.5 text-[10px]",
+                            activeTab === tab ? "bg-white/20" : "bg-surface-muted"
+                          )}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {activeTab === "explain" && (
+                <div className="space-y-3">
+                  {result.explanations.map((exp, i) => (
+                    <div key={i} className="card p-4">
+                      <h4 className="font-bold text-content">{exp.title}</h4>
+                      <p className="mt-1 text-sm leading-relaxed text-content-muted">
+                        {exp.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {activeTab === "warning" && (
+                <WarningBox
+                  warnings={
+                    result.warnings.length > 0
+                      ? result.warnings
+                      : ["Không có cảnh báo đặc biệt cho cấu hình này."]
+                  }
+                  variant="danger"
+                />
+              )}
+
+              {activeTab === "rollback" && tabCommands.length === 0 && (
+                <div className="card flex items-center justify-center p-8 text-sm text-content-faint">
+                  Không có lệnh rollback cho cấu hình này.
+                </div>
+              )}
+
+              {activeTab !== "explain" && activeTab !== "warning" && (
+                <div className="space-y-4">
+                  {activeTab === "rollback"
+                    ? tabCommands.map((cmd, i) => (
+                        <CommandBlock
+                          key={i}
+                          title={`Rollback: ${cmd.title}`}
+                          commands={cmd.rollback!}
+                          riskLevel={cmd.riskLevel}
+                          source={cmd.source}
+                        />
+                      ))
+                    : tabCommands.map((cmd, i) => (
+                        <CommandBlock
+                          key={i}
+                          title={cmd.title}
+                          description={cmd.description}
+                          commands={cmd.commands}
+                          riskLevel={cmd.riskLevel}
+                          checks={cmd.checks}
+                          rollback={cmd.rollback}
+                          warnings={cmd.warnings}
+                          source={cmd.source}
+                        />
+                      ))}
+                  {tabCommands.length === 0 && activeTab !== "rollback" && (
+                    <div className="card flex items-center justify-center p-8 text-sm text-content-faint">
+                      Không có lệnh trong tab này.
+                    </div>
                   )}
-                >
-                  {tabLabels[tab]}
-                </button>
-              ))}
+                </div>
+              )}
             </div>
-
-            {activeTab === "explain" && (
-              <div className="space-y-3">
-                {result.explanations.map((exp, i) => (
-                  <div
-                    key={i}
-                    className="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
-                  >
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      {exp.title}
-                    </h4>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      {exp.content}
-                    </p>
-                  </div>
-                ))}
+          ) : (
+            <div className="card flex min-h-[320px] flex-col items-center justify-center p-8 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted">
+                <Wand2 className="h-8 w-8 text-content-faint" />
               </div>
-            )}
-
-            {activeTab === "warning" && (
-              <WarningBox
-                warnings={
-                  result.warnings.length > 0
-                    ? result.warnings
-                    : ["Không có cảnh báo đặc biệt cho cấu hình này."]
-                }
-                variant="danger"
-              />
-            )}
-
-            {activeTab === "rollback" && tabCommands.length === 0 && (
-              <p className="text-sm text-gray-500">Không có lệnh rollback cho cấu hình này.</p>
-            )}
-
-            {activeTab !== "explain" && activeTab !== "warning" && (
-              <div className="space-y-4">
-                {activeTab === "rollback"
-                  ? tabCommands.map((cmd, i) => (
-                      <CommandBlock
-                        key={i}
-                        title={`Rollback: ${cmd.title}`}
-                        commands={cmd.rollback!}
-                        riskLevel={cmd.riskLevel}
-                        source={cmd.source}
-                      />
-                    ))
-                  : tabCommands.map((cmd, i) => (
-                      <CommandBlock
-                        key={i}
-                        title={cmd.title}
-                        description={cmd.description}
-                        commands={cmd.commands}
-                        riskLevel={cmd.riskLevel}
-                        checks={cmd.checks}
-                        rollback={cmd.rollback}
-                        warnings={cmd.warnings}
-                        source={cmd.source}
-                      />
-                    ))}
-                {tabCommands.length === 0 && activeTab !== "rollback" && (
-                  <p className="text-sm text-gray-500">
-                    Không có lệnh trong tab này.
-                  </p>
-                )}
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-gray-300 dark:border-gray-600">
-            <p className="text-sm text-gray-500">
-              Nhập thông tin và bấm &quot;Sinh lệnh&quot;
-            </p>
-          </div>
-        )}
+              <p className="font-medium text-content-muted">Chưa có kết quả</p>
+              <p className="mt-1 text-sm text-content-faint">
+                Nhập thông tin bên trái và bấm &quot;Sinh lệnh&quot;
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

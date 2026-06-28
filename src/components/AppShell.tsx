@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
+import clsx from "clsx";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [darkMode, setDarkMode] = useState(false);
@@ -23,19 +24,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.setItem("uch-theme", next ? "dark" : "light");
   }
 
-  if (!mounted) {
-    return (
-      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
-        <div className="w-72 shrink-0" />
-        <main className="flex-1 p-6">{children}</main>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Sidebar darkMode={darkMode} onToggleDark={toggleDark} />
-      <main className="flex-1 overflow-auto p-4 pt-16 lg:p-6 lg:pt-6">{children}</main>
+    <div className="relative flex min-h-screen">
+      {/* Background mesh */}
+      <div
+        className={clsx(
+          "pointer-events-none fixed inset-0 -z-10",
+          darkMode ? "bg-mesh-dark" : "bg-mesh-light"
+        )}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none fixed inset-0 -z-10 bg-surface/80 dark:bg-surface/90"
+        aria-hidden
+      />
+
+      {mounted ? (
+        <>
+          <Sidebar darkMode={darkMode} onToggleDark={toggleDark} />
+          <main className="flex-1 overflow-auto p-4 pt-20 lg:p-8 lg:pt-8">
+            <div className="animate-fade-in mx-auto max-w-6xl">{children}</div>
+          </main>
+        </>
+      ) : (
+        <>
+          <div className="hidden w-72 shrink-0 lg:block" />
+          <main className="flex-1 p-8">{children}</main>
+        </>
+      )}
     </div>
   );
 }
